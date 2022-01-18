@@ -29,7 +29,7 @@ pass_vault_file = os.path.expanduser("~") + "/.pswm"
 #   result of calling manage_phrase() or None if the user cancels the reset.
 def reset_master_password():
     print("\nYou have failed to enter the correct master password 3 times.")
-    print("Resetting your master password will make you lose your other passwords.")
+    print("Resetting your master password will delete your password vault.")
     text = input("[pswm] Do you want to reset your master password? (y/n): ")
 
     if text == "y":
@@ -208,36 +208,36 @@ class Command(Enum):
 #   command: The action to be performed
 def parse_command():
     command = Command.DEFAULT
-    
+
     for i in range(len(sys.argv)):
         if sys.argv[i].startswith("-") \
-        and sys.argv[i] not in ["-a", "-d", "-g"]:
-            print ("Unknown option: " + sys.argv[i])
+                and sys.argv[i] not in ["-a", "-d", "-g"]:
+            print("Unknown option: " + sys.argv[i])
             return Command.DEFAULT
         if i == 1:
             if sys.argv[i] == "-a":
                 command = Command.LST_KEY
             else:
-                command = Command.GET_KEY     
+                command = Command.GET_KEY
         elif i == 2:
             if sys.argv[i] == "-d":
                 command = Command.DEL_KEY
             elif sys.argv[i] == "-g":
-                command = Command.GEN_DEF 
+                command = Command.GEN_DEF
             else:
                 command = Command.ADD_KEY
         elif i == 3:
             if sys.argv[i-1] == "-g":
                 command = Command.GEN_LEN
         elif i > 3:
-            print ("Too many arguments.")
+            print("Too many arguments.")
             return Command.DEFAULT
     return command
 
 
 # Definition of the main function
 def main():
-    pass_vault = {} 
+    pass_vault = {}
     pass_vault = load_pass_vault(pass_vault_file)
     crypt_key = manage_phrase()
 
@@ -245,34 +245,35 @@ def main():
         print("Exiting...")
         save_pass_vault(pass_vault, pass_vault_file)
         return
-    
+
     command = parse_command()
 
-    if   command == Command.ADD_KEY: # pswm <alias> <password>
-        pass_vault = store_password(pass_vault, sys.argv[1], sys.argv[2], crypt_key)
+    if command == Command.ADD_KEY:  # pswm <alias> <password>
+        pass_vault = store_password(
+            pass_vault, sys.argv[1], sys.argv[2], crypt_key)
 
-    elif command == Command.GEN_DEF: # pswm <alias> -g
+    elif command == Command.GEN_DEF:  # pswm <alias> -g
         password = generate_password(default_length)
         store_password(pass_vault, sys.argv[1], password, crypt_key)
         print(password)
-    
-    elif command == Command.GEN_LEN: # pswm <alias> -g [length]
+
+    elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
         password = generate_password(sys.argv[3])
         store_password(pass_vault, sys.argv[1], password, crypt_key)
         print(password)
 
-    elif command == Command.DEL_KEY: # pswm <alias> -d
+    elif command == Command.DEL_KEY:  # pswm <alias> -d
         delete_password(pass_vault, sys.argv[1])
-    
-    elif command == Command.GET_KEY: # pswm <alias>
+
+    elif command == Command.GET_KEY:  # pswm <alias>
         password = get_password(pass_vault, sys.argv[1], crypt_key)
         if password is None:
             print("No password for " + sys.argv[1] + " was found.")
         else:
             print(password)
 
-    elif command == Command.LST_KEY: # pswm -a
-        if len (pass_vault) == 0:
+    elif command == Command.LST_KEY:  # pswm -a
+        if len(pass_vault) == 0:
             print("The password vault is empty.")
         for alias in pass_vault:
             print(alias + ": " + get_password(pass_vault, alias, crypt_key))
