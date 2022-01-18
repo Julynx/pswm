@@ -1,7 +1,7 @@
 # pswm
 A simple command line password manager written in python.
 
-
+![pswm](pswm.png)
 
 ## Dependencies
 
