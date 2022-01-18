@@ -22,7 +22,7 @@ The following commands will download the latest version of pswm from this reposi
 and install it in your `/usr/bin/` directory:
 ```
 git clone https://github.com/Julynx/pswm
-cd pswm-master
+cd pswm
 chmod +x pswm
 sudo cp pswm /usr/bin/
 ```
