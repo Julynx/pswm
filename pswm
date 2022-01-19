@@ -212,20 +212,14 @@ def main():
     if command == Command.ADD_KEY:  # pswm <alias> <password>
 
         if sys.argv[1] == "pswm":
-            crypt_key, lines = reset_master_password()
-            if crypt_key == False:
-                return
-            pass_vault["pswm"] = crypt_key     
+            print("You cannot change or delete the master password.")       
         else:
             pass_vault[sys.argv[1]] = sys.argv[2]
 
     elif command == Command.GEN_DEF:  # pswm <alias> -g
 
         if sys.argv[1] == "pswm":
-            crypt_key, lines = reset_master_password()
-            if crypt_key == False:
-                return
-            pass_vault["pswm"] = crypt_key    
+            print("You cannot change or delete the master password.")     
         else:
             password = generate_password(default_length)
             pass_vault[sys.argv[1]] = password
@@ -234,10 +228,7 @@ def main():
     elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
 
         if sys.argv[1] == "pswm":
-            crypt_key, lines = reset_master_password()
-            if crypt_key == False:
-                return
-            pass_vault["pswm"] = crypt_key    
+            print("You cannot change or delete the master password.")   
         else:
             password = generate_password(sys.argv[3])
             pass_vault[sys.argv[1]] = password
@@ -246,10 +237,7 @@ def main():
     elif command == Command.DEL_KEY:  # pswm <alias> -d
 
         if sys.argv[1] == "pswm":
-            crypt_key, lines = reset_master_password()
-            if crypt_key == False:
-                return
-            pass_vault["pswm"] = crypt_key    
+            print("You cannot change or delete the master password.")   
         else:
             del pass_vault[sys.argv[1]]
 
