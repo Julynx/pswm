@@ -34,7 +34,6 @@ def manage_master_password():
     if not os.path.isfile(pass_vault_file):
 
         crypt_key = ""
-
         while len(crypt_key) < min_length or len(crypt_key) > max_length:
             crypt_key = getpass.getpass("[pswm] Create a master password (" +
                                         str(min_length) + "-" +
@@ -92,7 +91,6 @@ def reset_master_password():
 def lines_to_pass_vault(lines):
 
     pass_vault = {}
-
     for line in lines:
         line = line.rstrip()
         try:
@@ -131,7 +129,6 @@ def encrypted_file_to_lines(file_name, master_password):
         return ""
 
     decrypted_lines = []
-
     with open(file_name, 'r') as f:
         for line in f:
             decrypted_line = cryptocode.decrypt(line, master_password)
