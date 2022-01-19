@@ -62,9 +62,12 @@ def reset_master_password():
     text = input("[pswm] Do you want to reset your master password? (y/n): ")
 
     if text == "y":
-        os.remove(pass_vault_file)
+        if os.path.isfile(pass_vault_file):
+            os.remove(pass_vault_file)
         return manage_master_password()
-
+    else:
+        print("Password reset aborted.")
+        return False, ""
 
 # Splits each line of a list of lines into two parts. Then inserts the second
 # part into the dictionary indexed by the first part.
@@ -72,6 +75,8 @@ def reset_master_password():
 #   lines: A list of lines.
 # returns:
 #   pass_vault: A dictionary containing the alias and password.
+
+
 def lines_to_pass_vault(lines):
 
     pass_vault = {}
@@ -199,20 +204,28 @@ def parse_command():
 def main():
 
     crypt_key, lines = manage_master_password()
+    if crypt_key == False:
+        return
     pass_vault = lines_to_pass_vault(lines)
     command = parse_command()
 
     if command == Command.ADD_KEY:  # pswm <alias> <password>
 
         if sys.argv[1] == "pswm":
-            print("You cannot modify the master password.")
+            crypt_key, lines = reset_master_password()
+            if crypt_key == False:
+                return
+            pass_vault["pswm"] = crypt_key     
         else:
             pass_vault[sys.argv[1]] = sys.argv[2]
 
     elif command == Command.GEN_DEF:  # pswm <alias> -g
 
         if sys.argv[1] == "pswm":
-            print("You cannot modify the master password.")
+            crypt_key, lines = reset_master_password()
+            if crypt_key == False:
+                return
+            pass_vault["pswm"] = crypt_key    
         else:
             password = generate_password(default_length)
             pass_vault[sys.argv[1]] = password
@@ -221,7 +234,10 @@ def main():
     elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
 
         if sys.argv[1] == "pswm":
-            print("You cannot modify the master password.")
+            crypt_key, lines = reset_master_password()
+            if crypt_key == False:
+                return
+            pass_vault["pswm"] = crypt_key    
         else:
             password = generate_password(sys.argv[3])
             pass_vault[sys.argv[1]] = password
@@ -230,7 +246,10 @@ def main():
     elif command == Command.DEL_KEY:  # pswm <alias> -d
 
         if sys.argv[1] == "pswm":
-            print("You cannot modify the master password.")
+            crypt_key, lines = reset_master_password()
+            if crypt_key == False:
+                return
+            pass_vault["pswm"] = crypt_key    
         else:
             del pass_vault[sys.argv[1]]
 
@@ -253,6 +272,8 @@ def main():
 
     lines = pass_vault_to_lines(pass_vault)
     lines_to_encrypted_file(lines, pass_vault_file, crypt_key)
+
+    return
 
 
 # Call the main function
