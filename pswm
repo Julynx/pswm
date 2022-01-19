@@ -21,6 +21,14 @@ max_length = 32
 pass_vault_file = os.path.expanduser("~") + "/.pswm"
 
 
+# Manager function for the master password. Asks the user for the master 
+# password if there is already a password vault. If not, it creates a new
+# password vault associated to a new master password. Can also reset the
+# master password after 3 failed attempts.
+# returns:
+#    crypt_key: The master password.
+#    lines: A list of lines containing the aliases and passwords decrypted 
+#           from the password vault with the master password.
 def manage_master_password():
 
     if not os.path.isfile(pass_vault_file):
@@ -57,6 +65,11 @@ def manage_master_password():
             return reset_master_password()
 
 
+# Function to reset the master password.
+# returns:
+#   manage_master_password(): The result of manage_master_password() containing
+#                            the new master password or False, "" if the user
+#                            does not want to reset the master password.
 def reset_master_password():
     print("Resetting your master password will delete your password vault.")
     text = input("[pswm] Do you want to reset your master password? (y/n): ")
@@ -69,14 +82,13 @@ def reset_master_password():
         print("Password reset aborted.")
         return False, ""
 
+
 # Splits each line of a list of lines into two parts. Then inserts the second
 # part into the dictionary indexed by the first part.
 # args:
 #   lines: A list of lines.
 # returns:
 #   pass_vault: A dictionary containing the alias and password.
-
-
 def lines_to_pass_vault(lines):
 
     pass_vault = {}
