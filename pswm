@@ -2,7 +2,6 @@
 import sys
 import os
 import cryptocode
-import bcrypt
 import random
 import string
 import getpass
@@ -19,165 +18,126 @@ min_length = 4
 default_length = 16
 max_length = 32
 
-master_pass_file = os.path.expanduser("~") + "/.$pswm$"
 pass_vault_file = os.path.expanduser("~") + "/.pswm"
 
 
-# This function guides the user through the process of
-# resetting the master password.
-# returns:
-#   result of calling manage_phrase() or None if the user cancels the reset.
+def manage_master_password():
+
+    if not os.path.isfile(pass_vault_file):
+
+        crypt_key = ""
+
+        while len(crypt_key) < min_length or len(crypt_key) > max_length:
+            crypt_key = getpass.getpass("[pswm] Create a master password (" +
+                                        str(min_length) + "-" +
+                                        str(max_length) +
+                                        " chars): ")
+
+        crypt_key_verify = ""
+        while crypt_key_verify != crypt_key:
+            crypt_key_verify = getpass.getpass("[pswm] Confirm your "
+                                               "master password: ")
+
+        lines = []
+        lines.append("pswm\t" + crypt_key)
+        return crypt_key, lines
+
+    for i in range(3):
+        crypt_key = getpass.getpass("[pswm] Master password: ")
+        lines = encrypted_file_to_lines(pass_vault_file, crypt_key)
+
+        if lines == False:
+            print("Sorry, try again.")
+        else:
+            return crypt_key, lines
+
+        if i == 2:
+            print("\nYou have failed to enter the correct "
+                  "master password 3 times.")
+            return reset_master_password()
+
+
 def reset_master_password():
-    print("\nYou have failed to enter the correct master password 3 times.")
     print("Resetting your master password will delete your password vault.")
     text = input("[pswm] Do you want to reset your master password? (y/n): ")
 
     if text == "y":
-        os.remove(master_pass_file)
         os.remove(pass_vault_file)
-        return manage_phrase()
-
-    else:
-        return None
+        return manage_master_password()
 
 
-# This function asks the user to enter a password and compares it to
-# the hash of the password stored in the master_pass_file
-# returns:
-#   crypt_key: the password the user has entered.
-def ask_and_check_phrase():
-
-    for i in range(3):
-        crypt_key = getpass.getpass("[pswm] Master password: ")
-        hash_key = None
-
-        with open(master_pass_file, 'r') as f:
-            hash_key = f.read()
-
-        flag = bcrypt.checkpw(crypt_key, hash_key)
-
-        if flag:
-            return crypt_key
-        else:
-            print("Sorry, try again.")
-
-    return reset_master_password()
-
-
-# This function asks the user to create a password
-# and stores it in the master_pass_file.
-# returns:
-#   crypt_key: the password the user has created.
-def ask_and_store_phrase():
-
-    crypt_key = ""
-    crypt_verify = ""
-
-    # Asking for the master password
-    while len(crypt_key) < min_length or len(crypt_key) > max_length:
-        crypt_key = getpass.getpass("[pswm] Create a master password (" +
-                                    str(min_length) + " - " +
-                                    str(max_length) + " chars): ")
-
-    # Asking for the verification of the master password
-    while crypt_key != crypt_verify:
-        crypt_verify = getpass.getpass("[pswm] Confirm your master password: ")
-        if crypt_key != crypt_verify:
-            print("Passwords do not match.")
-
-    # Hash and salt the master password
-    hashed_key = bcrypt.hashpw(crypt_key, bcrypt.gensalt())
-
-    # Store the master password hash
-    with open(master_pass_file, 'w') as f:
-        f.write(hashed_key)
-
-    return crypt_key
-
-
-# This function manages the master password for the password manager.
-# returns:
-#   password: password to use to encrypt/decrypt the pass_vault.
-def manage_phrase():
-
-    if not os.path.isfile(master_pass_file):
-        return ask_and_store_phrase()
-    else:
-        return ask_and_check_phrase()
-
-
-# This function loads a file into a dictionary called pass_vault.
+# Splits each line of a list of lines into two parts. Then inserts the second
+# part into the dictionary indexed by the first part.
 # args:
-#   filename: the name of the file to load.
+#   lines: A list of lines.
 # returns:
-#   pass_vault: the dictionary pass_vault with the file loaded.
-def load_pass_vault(filename):
+#   pass_vault: A dictionary containing the alias and password.
+def lines_to_pass_vault(lines):
 
     pass_vault = {}
 
-    if os.path.isfile(filename):
-        with open(filename, 'r') as f:
-            for line in f:
-                line = line.rstrip()
-                key, value = line.split('\t')
-                pass_vault[key] = value
+    for line in lines:
+        line = line.rstrip()
+        try:
+            key, value = line.split('\t')
+            pass_vault[key] = value
+        except ValueError:
+            pass
 
     return pass_vault
 
 
-# This function saves a dictionary called pass_vault into a file.
+# For each key in the dictionary, it inserts a string into a list containing
+# the key and the value separated by a tab.
 # args:
-#   pass_vault: the dictionary to save.
-#   filename: the name of the file to save it in.
-def save_pass_vault(pass_vault, filename):
-
-    with open(filename, 'w') as f:
-        for alias in pass_vault:
-            f.write(alias + "\t" + pass_vault[alias] + "\n")
-
-
-# This function encrypts and stores a password in the pass_vault.
-# args:
-#   pass_vault: the library to store the password in.
-#   alias: the alias of the password to store.
-#   password: the actual password to store.
-#   crypt_key: the master password to use to encrypt the password.
+#   pass_vault: A dictionary aliases and passwords.
 # returns:
-#   pass_vault: the dictionary with the password encrypted and stored.
-def store_password(pass_vault, alias, password, crypt_key):
-    encrypted_pass = cryptocode.encrypt(password, crypt_key)
-    pass_vault[alias] = encrypted_pass
-    return pass_vault
+#   lines: A list of lines each formatted as key\tvalue.
+def pass_vault_to_lines(pass_vault):
+
+    lines = []
+    for alias in pass_vault:
+        lines.append(alias + '\t' + pass_vault[alias])
+
+    return lines
 
 
-# This function gets a password from the pass_vault.
+# This function opens and decrypts the password vault.
 # args:
-#   pass_vault: the pass_vault to get the password from.
-#   alias: the alias of the password to get.
-#   crypt_key: the master password to use to decrypt the password.
+#   file_name: The name of the file containing the password vault.
+#   master_password: The master password to use to decrypt the password vault.
 # returns:
-#   password: the decrypted password associated with the alias.
-def get_password(pass_vault, alias, crypt_key):
-    if alias in pass_vault:
-        encrypted = pass_vault[alias]
-        password = cryptocode.decrypt(encrypted, crypt_key)
-        return password
-    else:
-        return None
+#   decrypted_lines: A list of lines containing the decrypted aliases passwords.
+def encrypted_file_to_lines(file_name, master_password):
+
+    if not os.path.isfile(file_name):
+        return ""
+
+    decrypted_lines = []
+
+    with open(file_name, 'r') as f:
+        for line in f:
+            decrypted_line = cryptocode.decrypt(line, master_password)
+
+            if decrypted_line == False:
+                return False
+
+            decrypted_lines.append(decrypted_line)
+
+    return decrypted_lines
 
 
-# This function deletes a password from the pass_vault dictionary.
+# This function encrypts and stores the password vault.
 # args:
-#   pass_vault: the pass_vault dictionaryto delete the password from.
-#   alias: the alias of the password to delete.
-# returns:
-#   pass_vault: the dictionary without the password.
-def delete_password(pass_vault, alias):
-    if alias in pass_vault:
-        del pass_vault[alias]
-        return pass_vault
-    else:
-        return None
+#    lines: A list of lines containing the aliases and passwords.
+#    file_name: The name of the file to store the password vault.
+#    master_password: The master password to use to encrypt the password vault.
+def lines_to_encrypted_file(lines, file_name, master_password):
+
+    with open(file_name, 'w') as f:
+        for line in lines:
+            encrypted_line = cryptocode.encrypt(line, master_password)
+            f.write(encrypted_line + "\n")
 
 
 # This function generates a password of legth passed as argument.
@@ -237,51 +197,62 @@ def parse_command():
 
 # Definition of the main function
 def main():
-    pass_vault = {}
-    pass_vault = load_pass_vault(pass_vault_file)
-    crypt_key = manage_phrase()
 
-    if crypt_key is None:
-        print("Exiting...")
-        save_pass_vault(pass_vault, pass_vault_file)
-        return
-
+    crypt_key, lines = manage_master_password()
+    pass_vault = lines_to_pass_vault(lines)
     command = parse_command()
 
     if command == Command.ADD_KEY:  # pswm <alias> <password>
-        pass_vault = store_password(
-            pass_vault, sys.argv[1], sys.argv[2], crypt_key)
+
+        if sys.argv[1] == "pswm":
+            print("You cannot modify the master password.")
+        else:
+            pass_vault[sys.argv[1]] = sys.argv[2]
 
     elif command == Command.GEN_DEF:  # pswm <alias> -g
-        password = generate_password(default_length)
-        store_password(pass_vault, sys.argv[1], password, crypt_key)
-        print(password)
 
-    elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
-        password = generate_password(sys.argv[3])
-        store_password(pass_vault, sys.argv[1], password, crypt_key)
-        print(password)
-
-    elif command == Command.DEL_KEY:  # pswm <alias> -d
-        delete_password(pass_vault, sys.argv[1])
-
-    elif command == Command.GET_KEY:  # pswm <alias>
-        password = get_password(pass_vault, sys.argv[1], crypt_key)
-        if password is None:
-            print("No password for " + sys.argv[1] + " was found.")
+        if sys.argv[1] == "pswm":
+            print("You cannot modify the master password.")
         else:
+            password = generate_password(default_length)
+            pass_vault[sys.argv[1]] = password
             print(password)
 
+    elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
+
+        if sys.argv[1] == "pswm":
+            print("You cannot modify the master password.")
+        else:
+            password = generate_password(sys.argv[3])
+            pass_vault[sys.argv[1]] = password
+            print(password)
+
+    elif command == Command.DEL_KEY:  # pswm <alias> -d
+
+        if sys.argv[1] == "pswm":
+            print("You cannot modify the master password.")
+        else:
+            del pass_vault[sys.argv[1]]
+
+    elif command == Command.GET_KEY:  # pswm <alias>
+
+        if sys.argv[1] not in pass_vault:
+            print("No password for " + sys.argv[1] + " was found.")
+        else:
+            print(pass_vault[sys.argv[1]])
+
     elif command == Command.LST_KEY:  # pswm -a
+
         if len(pass_vault) == 0:
             print("The password vault is empty.")
         for alias in pass_vault:
-            print(alias + ": " + get_password(pass_vault, alias, crypt_key))
+            print(alias + ": " + pass_vault[alias])
 
     else:                            # pswm
         print(help_msg)
 
-    save_pass_vault(pass_vault, pass_vault_file)
+    lines = pass_vault_to_lines(pass_vault)
+    lines_to_encrypted_file(lines, pass_vault_file, crypt_key)
 
 
 # Call the main function
