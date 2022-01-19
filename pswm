@@ -7,6 +7,7 @@ import string
 import getpass
 from enum import Enum
 
+
 help_msg = '''
   pswm <alias> <password>    - Stores a new password in the password vault.
   pswm <alias> -g [length]   - Generates a random password and stores it.
@@ -21,13 +22,13 @@ max_length = 32
 pass_vault_file = os.path.expanduser("~") + "/.pswm"
 
 
-# Manager function for the master password. Asks the user for the master 
+# Manager function for the master password. Asks the user for the master
 # password if there is already a password vault. If not, it creates a new
 # password vault associated to a new master password. Can also reset the
 # master password after 3 failed attempts.
 # returns:
 #    crypt_key: The master password.
-#    lines: A list of lines containing the aliases and passwords decrypted 
+#    lines: A list of lines containing the aliases and passwords decrypted
 #           from the password vault with the master password.
 def manage_master_password():
 
@@ -53,7 +54,7 @@ def manage_master_password():
         crypt_key = getpass.getpass("[pswm] Master password: ")
         lines = encrypted_file_to_lines(pass_vault_file, crypt_key)
 
-        if lines == False:
+        if not lines:
             print("Sorry, try again.")
         else:
             return crypt_key, lines
@@ -122,7 +123,7 @@ def pass_vault_to_lines(pass_vault):
 #   file_name: The name of the file containing the password vault.
 #   master_password: The master password to use to decrypt the password vault.
 # returns:
-#   decrypted_lines: A list of lines containing the decrypted aliases passwords.
+#   decrypted_lines: A list of lines containing the decrypted passwords.
 def encrypted_file_to_lines(file_name, master_password):
 
     if not os.path.isfile(file_name):
@@ -133,7 +134,7 @@ def encrypted_file_to_lines(file_name, master_password):
         for line in f:
             decrypted_line = cryptocode.decrypt(line, master_password)
 
-            if decrypted_line == False:
+            if not decrypted_line:
                 return False
 
             decrypted_lines.append(decrypted_line)
@@ -213,7 +214,7 @@ def parse_command():
 def main():
 
     crypt_key, lines = manage_master_password()
-    if crypt_key == False:
+    if not crypt_key:
         return
     pass_vault = lines_to_pass_vault(lines)
     command = parse_command()
@@ -221,14 +222,14 @@ def main():
     if command == Command.ADD_KEY:  # pswm <alias> <password>
 
         if sys.argv[1] == "pswm":
-            print("You cannot change or delete the master password.")       
+            print("You cannot change or delete the master password.")
         else:
             pass_vault[sys.argv[1]] = sys.argv[2]
 
     elif command == Command.GEN_DEF:  # pswm <alias> -g
 
         if sys.argv[1] == "pswm":
-            print("You cannot change or delete the master password.")     
+            print("You cannot change or delete the master password.")
         else:
             password = generate_password(default_length)
             pass_vault[sys.argv[1]] = password
@@ -237,7 +238,7 @@ def main():
     elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
 
         if sys.argv[1] == "pswm":
-            print("You cannot change or delete the master password.")   
+            print("You cannot change or delete the master password.")
         else:
             password = generate_password(sys.argv[3])
             pass_vault[sys.argv[1]] = password
@@ -246,7 +247,7 @@ def main():
     elif command == Command.DEL_KEY:  # pswm <alias> -d
 
         if sys.argv[1] == "pswm":
-            print("You cannot change or delete the master password.")   
+            print("You cannot change or delete the master password.")
         else:
             del pass_vault[sys.argv[1]]
 
@@ -269,8 +270,6 @@ def main():
 
     lines = pass_vault_to_lines(pass_vault)
     lines_to_encrypted_file(lines, pass_vault_file, crypt_key)
-
-    return
 
 
 # Call the main function
