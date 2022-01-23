@@ -6,20 +6,49 @@ import random
 import string
 import getpass
 from enum import Enum
-
+from prettytable import PrettyTable
 
 help_msg = '''
-  pswm <alias> <password>    - Stores a new password in the password vault.
-  pswm <alias> -g [length]   - Generates a random password and stores it.
-  pswm <alias> -d            - Deletes a password for a given alias.
-  pswm <alias>               - Prints a password associated to an alias.
-  pswm -a                    - Prints all stored passwords.
+  pswm <alias> <username> <password>  - Store a username and a password.
+  pswm <alias> <username> -g [length] - Generate a random password and store it.
+  pswm <alias> -d                     - Delete user and password for an alias.
+  pswm <alias>                        - Print user and password for an alias.
+  pswm -a                             - Print all stored users and passwords.
 '''
 min_length = 4
 default_length = 16
 max_length = 32
 
 pass_vault_file = os.path.expanduser("~") + "/.pswm"
+
+
+# Function to print the password vault using prettytable.
+# args:
+#  pass_vault: A dictionary aliases associated to usernames and passwords.
+#  alias: The alias to print. If None, all aliases are printed. 
+def print_pass_vault(pass_vault, alias=None):
+
+    table = PrettyTable()
+
+    if alias != None:
+        if alias in pass_vault:
+            row = []
+            row.append(alias)
+            row.extend(pass_vault[alias])
+            table.add_row(row)
+        else:
+            print("No password for " + alias + " was found.")
+
+    else:
+        for alias in pass_vault:
+            row = []
+            row.append(alias)
+            row.extend(pass_vault[alias])
+            table.add_row(row)
+    
+    table.field_names = ["Alias", "Username", "Password"]
+    table.align = "l"
+    print (table)
 
 
 # Manager function for the master password. Asks the user for the master
@@ -47,7 +76,7 @@ def manage_master_password():
                                                "master password: ")
 
         lines = []
-        lines.append("pswm\t" + crypt_key)
+        lines.append("pswm\t" + getpass.getuser() + "\t" + crypt_key)
         return crypt_key, lines
 
     for i in range(3):
@@ -95,8 +124,8 @@ def lines_to_pass_vault(lines):
     for line in lines:
         line = line.rstrip()
         try:
-            key, value = line.split('\t')
-            pass_vault[key] = value
+            alias, username, password = line.split('\t')
+            pass_vault[alias] = [username, password]
         except ValueError:
             pass
 
@@ -104,16 +133,18 @@ def lines_to_pass_vault(lines):
 
 
 # For each key in the dictionary, it inserts a string into a list containing
-# the key and the value separated by a tab.
+# the key and the values separated by a tab.
 # args:
-#   pass_vault: A dictionary aliases and passwords.
+#   pass_vault: A dictionary aliases associated to usernames and passwords.
 # returns:
-#   lines: A list of lines each formatted as key\tvalue.
+#   lines: A list of lines each formatted as key\tvalue[0]\tvalue[1].
 def pass_vault_to_lines(pass_vault):
 
     lines = []
     for alias in pass_vault:
-        lines.append(alias + '\t' + pass_vault[alias])
+        lines.append(alias + '\t' + 
+                     pass_vault[alias][0] + '\t' + 
+                     pass_vault[alias][1])
 
     return lines
 
@@ -135,7 +166,7 @@ def encrypted_file_to_lines(file_name, master_password):
     decrypted_text = cryptocode.decrypt(encrypted_text, master_password)
 
     if decrypted_text is False:
-        return ""
+        return False
 
     decrypted_lines = decrypted_text.splitlines()
     return decrypted_lines
@@ -197,14 +228,15 @@ def parse_command():
         elif i == 2:
             if sys.argv[i] == "-d":
                 command = Command.DEL_KEY
-            elif sys.argv[i] == "-g":
+        elif i == 3:
+            if sys.argv[i] == "-g":
                 command = Command.GEN_DEF
             else:
-                command = Command.ADD_KEY
-        elif i == 3:
+                command = Command.ADD_KEY    
+        elif i == 4:
             if sys.argv[i-1] == "-g":
                 command = Command.GEN_LEN
-        elif i > 3:
+        elif i > 4:    
             print("Too many arguments.")
             return Command.DEFAULT
     return command
@@ -216,6 +248,7 @@ def main():
     crypt_key, lines = manage_master_password()
     if not crypt_key:
         return
+
     pass_vault = lines_to_pass_vault(lines)
     command = parse_command()
 
@@ -224,7 +257,8 @@ def main():
         if sys.argv[1] == "pswm":
             print("You cannot change or delete the master password.")
         else:
-            pass_vault[sys.argv[1]] = sys.argv[2]
+            pass_vault[sys.argv[1]] = [sys.argv[2], sys.argv[3]]
+            print("Added username and password for " + sys.argv[1] + ".")
 
     elif command == Command.GEN_DEF:  # pswm <alias> -g
 
@@ -232,17 +266,17 @@ def main():
             print("You cannot change or delete the master password.")
         else:
             password = generate_password(default_length)
-            pass_vault[sys.argv[1]] = password
-            print(password)
+            pass_vault[sys.argv[1]] = [sys.argv[2], password]
+            print_pass_vault(pass_vault, sys.argv[1])
 
     elif command == Command.GEN_LEN:  # pswm <alias> -g [length]
 
         if sys.argv[1] == "pswm":
             print("You cannot change or delete the master password.")
         else:
-            password = generate_password(sys.argv[3])
-            pass_vault[sys.argv[1]] = password
-            print(password)
+            password = generate_password(sys.argv[4])
+            pass_vault[sys.argv[1]] = [sys.argv[2], password]
+            print_pass_vault(pass_vault, sys.argv[1])
 
     elif command == Command.DEL_KEY:  # pswm <alias> -d
 
@@ -250,20 +284,18 @@ def main():
             print("You cannot change or delete the master password.")
         else:
             del pass_vault[sys.argv[1]]
+            print("Deleted username and password for " + sys.argv[1] + ".")
 
     elif command == Command.GET_KEY:  # pswm <alias>
 
-        if sys.argv[1] not in pass_vault:
-            print("No password for " + sys.argv[1] + " was found.")
-        else:
-            print(pass_vault[sys.argv[1]])
+        print_pass_vault(pass_vault, sys.argv[1])
 
     elif command == Command.LST_KEY:  # pswm -a
 
         if len(pass_vault) == 0:
             print("The password vault is empty.")
-        for alias in pass_vault:
-            print(alias + ": " + pass_vault[alias])
+        else:
+            print_pass_vault(pass_vault)
 
     else:                            # pswm
         print(help_msg)
