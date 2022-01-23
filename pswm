@@ -129,16 +129,15 @@ def encrypted_file_to_lines(file_name, master_password):
     if not os.path.isfile(file_name):
         return ""
 
-    decrypted_lines = []
     with open(file_name, 'r') as f:
-        for line in f:
-            decrypted_line = cryptocode.decrypt(line, master_password)
+        encrypted_text = f.read()
 
-            if not decrypted_line:
-                return False
+    decrypted_text = cryptocode.decrypt(encrypted_text, master_password)
 
-            decrypted_lines.append(decrypted_line)
+    if decrypted_text is False:
+        return ""
 
+    decrypted_lines = decrypted_text.splitlines()
     return decrypted_lines
 
 
@@ -149,10 +148,11 @@ def encrypted_file_to_lines(file_name, master_password):
 #    master_password: The master password to use to encrypt the password vault.
 def lines_to_encrypted_file(lines, file_name, master_password):
 
+    decrypted_text = '\n'.join(lines)
+    encrypted_text = cryptocode.encrypt(decrypted_text, master_password)
+
     with open(file_name, 'w') as f:
-        for line in lines:
-            encrypted_line = cryptocode.encrypt(line, master_password)
-            f.write(encrypted_line + "\n")
+        f.write(encrypted_text)
 
 
 # This function generates a password of legth passed as argument.
