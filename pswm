@@ -291,7 +291,7 @@ def main():
     if command.value <= 4 and sys.argv[1] == "pswm":
         print("You cannot change or delete the master password.")
 
-    if command == Command.ADD_KEY:    # pswm <alias> <password>
+    elif command == Command.ADD_KEY:    # pswm <alias> <password>
         pass_vault[sys.argv[1]] = [sys.argv[2], sys.argv[3]]
         print("Added username and password for " + sys.argv[1] + ".")
 
