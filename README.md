@@ -60,7 +60,6 @@ pswm -a                             - Print all stored users and passwords.
 
 ## License
 
-This software comes **without any warranty** as distributed under the GNU GPL 2.0 license.
-You should receive a copy of the license with your download of pswm. 
-The GNU GPL 2.0 license is available under the following url
-https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+This software comes **without any warranty** as distributed under the [GNU GPL 2.0 license](https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html).
+You should receive a copy of the license with your download of pswm.
+
