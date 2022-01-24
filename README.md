@@ -1,7 +1,15 @@
 # pswm
 A simple command line password manager written in python.
 
-![pswm](pswm.png)
+
+Built to be secure, it encrypts your passwords with a key that is not stored in any form.
+![pswm](https://i.imgur.com/IqHqajs.png)
+
+Its intuitive syntax and its reduced set of commands make it easy to use.
+![pswm](https://i.imgur.com/GPNoxX6.png)
+
+It looks better than you might expect for a command-line application thanks to the use of prettyTable.
+![pswm](https://i.imgur.com/Ie5UCvX.png)
 
 ## Dependencies
 
