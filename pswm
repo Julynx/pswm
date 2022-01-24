@@ -288,7 +288,7 @@ def main():
     command = parse_command()
 
     # Warn if the user tries to modify the master password.
-    if (command.value <= 4) and sys.argv[1] == "pswm":
+    if command.value <= 4 and sys.argv[1] == "pswm":
         print("You cannot change or delete the master password.")
 
     if command == Command.ADD_KEY:    # pswm <alias> <password>
