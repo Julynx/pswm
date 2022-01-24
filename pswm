@@ -6,7 +6,7 @@ import random
 import string
 import getpass
 from enum import Enum
-from prettytable import PrettyTable
+from prettytable import PrettyTable, SINGLE_BORDER
 
 help_msg = '''
   pswm <alias> <username> <password>  - Store a username and a password.
@@ -50,6 +50,7 @@ def print_pass_vault(pass_vault, alias=None):
 
     table.field_names = ["Alias", "Username", "Password"]
     table.align = "l"
+    table.set_style(SINGLE_BORDER)
     print(table)
 
 
