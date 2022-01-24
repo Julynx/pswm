@@ -253,25 +253,21 @@ def parse_command():
             print("Unknown option: " + sys.argv[i])
             return Command.DEFAULT
         if i == 1:
+            command = Command.GET_KEY
             if sys.argv[i] == "-a":
                 command = Command.LST_KEY
-            else:
-                command = Command.GET_KEY
         elif i == 2:
+            command = Command.DEFAULT
             if sys.argv[i] == "-d":
                 command = Command.DEL_KEY
-            else:
-                command = Command.DEFAULT
         elif i == 3:
+            command = Command.ADD_KEY
             if sys.argv[i] == "-g":
                 command = Command.GEN_DEF
-            else:
-                command = Command.ADD_KEY
         elif i == 4:
+            command = Command.DEFAULT
             if sys.argv[i-1] == "-g":
                 command = Command.GEN_LEN
-            else:
-                command = Command.DEFAULT
         elif i > 4:
             print("Too many arguments.")
             return Command.DEFAULT
