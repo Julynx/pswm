@@ -61,26 +61,44 @@ def print_pass_vault(pass_vault, alias=None):
 #           from the password vault with the master password.
 def manage_master_password():
 
-    if not os.path.isfile(pass_vault_file):
+    if not (os.path.isfile(pass_vault_file) \
+        and os.path.getsize(pass_vault_file) > 0):
 
         crypt_key = ""
         while len(crypt_key) < min_length or len(crypt_key) > max_length:
-            crypt_key = getpass.getpass("[pswm] Create a master password (" +
-                                        str(min_length) + "-" +
-                                        str(max_length) +
-                                        " chars): ")
+        
+            try:    
+                crypt_key = getpass.getpass("[pswm] Create a master password (" +
+                                            str(min_length) + "-" +
+                                            str(max_length) +
+                                            " chars): ")
+            except KeyboardInterrupt:
+                print("\n")
+                return False, ""
 
         crypt_key_verify = ""
         while crypt_key_verify != crypt_key:
-            crypt_key_verify = getpass.getpass("[pswm] Confirm your "
-                                               "master password: ")
 
+            try:
+                crypt_key_verify = getpass.getpass("[pswm] Confirm your "
+                                                   "master password: ")
+            except KeyboardInterrupt:
+                print("\n")
+                return False, ""
+
+        print ("Password vault ~/.pswm created.")
         lines = []
         lines.append("pswm\t" + getpass.getuser() + "\t" + crypt_key)
         return crypt_key, lines
 
     for i in range(3):
-        crypt_key = getpass.getpass("[pswm] Master password: ")
+
+        try:
+            crypt_key = getpass.getpass("[pswm] Master password: ")
+        except KeyboardInterrupt:
+            print("\n")
+            return False, ""
+
         lines = encrypted_file_to_lines(pass_vault_file, crypt_key)
 
         if not lines:
@@ -101,11 +119,17 @@ def manage_master_password():
 #                            does not want to reset the master password.
 def reset_master_password():
     print("Resetting your master password will delete your password vault.")
-    text = input("[pswm] Do you want to reset your master password? (y/n): ")
+    
+    try:
+        text = input("[pswm] Do you want to reset your master password? (y/n): ")
+    except KeyboardInterrupt:
+        print("\nPassword reset aborted.")
+        return False, ""
 
     if text == "y":
         if os.path.isfile(pass_vault_file):
             os.remove(pass_vault_file)
+            print ("Password vault ~/.pswm deleted.\n")
         return manage_master_password()
     else:
         print("Password reset aborted.")
