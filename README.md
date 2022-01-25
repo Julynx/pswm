@@ -2,7 +2,7 @@
 *A simple command line password manager written in python.*
 <br><br>
 
-<h4 align="center">Built to be secure, it encrypts your passwords with a key that is not stored in any form.</h4>
+<h4 align="center">Built to be secure, it encrypts your passwords with a key that only you know.</h4>
 <p align="center">  
   <img width="772" src="https://i.imgur.com/IqHqajs.png">
 </p>
