@@ -14,7 +14,7 @@
 </p>
 <br>
 
-<h4 align="center">It looks better than you might expect for a command-line application thanks to prettyTable.</h4>
+<h4 align="center">It looks better than you might expect for a command-line application thanks to prettytable.</h4>
 <p align="center">  
   <img width="772" src="https://i.imgur.com/Ie5UCvX.png">
 </p>
