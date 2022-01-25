@@ -27,7 +27,7 @@ pip3 install cryptocode
 pip3 install prettytable
 ```
 It has been tested with Python 3.8.10, results may vary if other versions are used.
-<br>
+<br><br>
 
 ## Installation
 The following commands will download the latest version of pswm from this repository 
@@ -39,7 +39,7 @@ chmod +x pswm
 sudo cp pswm /usr/bin/
 ```
 The program can now be ran from a terminal with the command `pswm`.
-<br>
+<br><br>
 
 ## Usage
 When running pswm for the first time, you will be prompted to define a master password that will be used to encrypt your other passwords. 
