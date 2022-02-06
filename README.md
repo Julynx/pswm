@@ -56,6 +56,19 @@ pswm -a                             - Print all stored users and passwords.
 ```
 <br>
 
+## Importing from CSV
+You can use the included python script `from_csv.py` to import passwords from your browser into pswm:
+
+- In Chrome, navigate to `Settings > Autofill > Passwords`. 
+
+- Click on the three dotted menu to the right of `Saved Passwords` and select `Export passwords`.
+
+- You can now execute the script to import all your passwords into pswm with the following command:
+```
+python3 from_csv.py <file.csv> <master_password>
+```
+<br>
+
 ## License
 This software comes **without any warranty** as distributed under the [GNU GPL 2.0 license](https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html).
 You should receive a copy of the license with your download of pswm.
