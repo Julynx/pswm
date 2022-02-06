@@ -11,21 +11,21 @@ informational = """
 2) Your csv file must be formatted as below,
    which is the default for Chrome, Brave and other browsers:
 
-    <name>,<url>,<username>,<password>
+   <name>,<url>,<username>,<password>
 
 3) This script also needs to modify 'pswm' by replacing the line:
 
-    crypt_key = getpass.getpass("[pswm] Master password: ")
+   crypt_key = getpass.getpass("[pswm] Master password: ")
 
-    with:
+   with:
 
-    crypt_key = input("[pswm] Master password: ")
+   crypt_key = input("[pswm] Master password: ")
 
-    It will be reverted back to normal when the insertion is finished.
-    This is set to happen automatically but may fail in some cases.
+   It will be reverted back to normal when the insertion is finished.
+   This is set to happen automatically but may fail in some cases.
 
-    If you already did it manually, press 'M' in the following prompt.
-    Otherwise, select 'A'.
+   If you already did it manually, press 'M' in the following prompt.
+   Otherwise, select 'A'.
 """
 
 pswm_install = "/usr/bin/pswm"
