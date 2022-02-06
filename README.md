@@ -71,5 +71,6 @@ python3 from_csv.py <file.csv> <master_password>
 
 ## License
 This software comes **without any warranty** as distributed under the [GNU GPL 2.0 license](https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html).
+
 You should receive a copy of the license with your download of pswm.
 
