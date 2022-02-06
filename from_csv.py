@@ -22,7 +22,7 @@ informational = """
     crypt_key = input("[pswm] Master password: ")
 
     It will be reverted back to normal when the insertion is finished.
-    This is set to be happen automatically but may fail in some cases.
+    This is set to happen automatically but may fail in some cases.
 
     If you already did it manually, press 'M' in the following prompt.
     Otherwise, select 'A'.
