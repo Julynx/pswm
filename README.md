@@ -61,7 +61,7 @@ You can use the included python script `from_csv.py` to import passwords from yo
 
 - In Chrome, navigate to `Settings > Autofill > Passwords`. 
 
-- Click on the three dotted menu to the right of 'Saved Passwords' and select `Export passwords`.
+- Click on the three dotted menu to the right of *Saved Passwords* and select `Export passwords`.
 
 - You can now execute the script to import all your passwords into pswm with the following command:
 ```
