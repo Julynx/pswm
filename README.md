@@ -23,8 +23,7 @@
 ## Dependencies
 pswm uses [cryptocode](https://pypi.org/project/cryptocode/) & [prettytable](https://pypi.org/project/prettytable/) which can be installed through pip:
 ```
-pip3 install cryptocode
-pip3 install prettytable
+pip3 install cryptocode prettytable
 ```
 It has been tested with Python 3.8.10, results may vary if other versions are used.
 <br><br>
@@ -34,8 +33,14 @@ The following commands will download the latest version of pswm from this reposi
 and install it in your `/usr/bin/` directory:
 ```
 git clone https://github.com/Julynx/pswm
+```
+```
 cd pswm
+```
+```
 chmod +x pswm
+```
+```
 sudo cp pswm /usr/bin/
 ```
 The program can now be ran from a terminal with the command `pswm`.
