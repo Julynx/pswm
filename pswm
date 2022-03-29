@@ -5,12 +5,11 @@ import cryptocode
 import random
 import string
 import getpass
-from enum import Enum
 from prettytable import PrettyTable, SINGLE_BORDER
+from contextlib import suppress
 
-help_msg = '''
-  pswm <alias> <username> <password>  - Store a username and a password.
-  pswm <alias> <username> -g [length] - Store a random password for a username.
+help_msg = '''  pswm <alias> <user> <password>      - Store a username and a password.
+  pswm <alias> <user> -g=<length>     - Store a random password for a username.
   pswm <alias> -d                     - Delete user and password for an alias.
   pswm <alias>                        - Print user and password for an alias.
   pswm -a                             - Print all stored users and passwords.
@@ -19,6 +18,49 @@ min_length = 4
 default_length = 16
 max_length = 32
 pass_vault_file = os.path.expanduser("~") + "/.pswm"
+
+
+def args(positional=[]):
+    """
+    Simple argument parser.
+
+    Example:
+    $: program joe 1234 -keep -host=127.0.0.1
+
+    dictionary = args(["username", "password"])
+
+    >> username:    joe
+    >> password:    1234
+    >> keep:        True
+    >> host:        127.0.0.1
+
+    Args:
+        positional (str): A list of strings for the positional arguments.
+
+    Returns:
+        dict: A dictionary containing the argument names and their values.
+    """
+    args_dict = {}
+
+    # Store positional arguments
+    tail = len(positional)
+    for i, pos_arg in enumerate(positional):
+        with suppress(IndexError):
+            if str(sys.argv[i+1]).startswith("-"):
+                tail = i
+                break
+            value = sys.argv[i+1]
+            args_dict[pos_arg] = value
+
+    # Store flags
+    for i in range(tail+1, len(sys.argv)):
+        try:
+            value = str(sys.argv[i]).split("=")[1]
+        except IndexError:
+            value = True
+        args_dict[str(sys.argv[i]).split("=")[0]] = value
+
+    return args_dict
 
 
 def print_pass_vault(pass_vault, alias=None):
@@ -266,87 +308,45 @@ def generate_password(length):
     return password
 
 
-class Command(Enum):
-    ADD_KEY = 1  # (Modifies)   Add a new alias and password.
-    GEN_DEF = 2  # (Modifies)   Generate a new password.
-    GEN_LEN = 3  # (Modifies)   Generate a new password of a given length.
-    DEL_KEY = 4  # (Modifies)   Delete an alias.
-    GET_KEY = 5  # (Reads)      Get the password associated to an alias.
-    LST_KEY = 6  # (Reads)      List all aliases.
-    DEFAULT = 7  # (Reads)      Print the program's default help message.
-
-
-def parse_command():
-    """
-    This function parses the command line arguments and returns a Command enum
-    containing the action to be performed.
-
-    Returns:
-        Command: The action to be performed.
-    """
-    command = Command.DEFAULT
-    for i in range(len(sys.argv)):
-        if sys.argv[i].startswith("-") \
-                and sys.argv[i] not in ["-a", "-d", "-g"]:
-            print("Unknown option: " + sys.argv[i])
-            return Command.DEFAULT
-        if i == 1:
-            command = Command.GET_KEY
-            if sys.argv[i] == "-a":
-                command = Command.LST_KEY
-        elif i == 2:
-            command = Command.DEFAULT
-            if sys.argv[i] == "-d":
-                command = Command.DEL_KEY
-        elif i == 3:
-            command = Command.ADD_KEY
-            if sys.argv[i] == "-g":
-                command = Command.GEN_DEF
-        elif i == 4:
-            command = Command.DEFAULT
-            if sys.argv[i-1] == "-g":
-                command = Command.GEN_LEN
-        elif i > 4:
-            print("Too many arguments.")
-            return Command.DEFAULT
-    return command
-
-
 def main():
     crypt_key, lines = manage_master_password()
     if not crypt_key:
         return
 
     pass_vault = lines_to_pass_vault(lines)
-    command = parse_command()
+    arg = args(["site", "username", "password"])
 
-    # Warn if the user tries to modify the master password.
-    if command.value <= 4 and sys.argv[1] == "pswm":
+    if ("password" in arg.keys() or "-g" in arg.keys() or "-d" in arg.keys()) \
+            and (str(arg["site"]) == "pswm"):
         print("You cannot change or delete the master password.")
 
-    elif command == Command.ADD_KEY:  # pswm <alias> <username> <password>
-        pass_vault[sys.argv[1]] = [sys.argv[2], sys.argv[3]]
-        print("Added username and password for " + sys.argv[1] + ".")
+    elif arg.keys() == {"site", "username", "password"}:
+        pass_vault[arg["site"]] = [
+            arg["username"], arg["password"]]
+        print("Added username and password for " + arg["site"] + ".")
 
-    elif command == Command.GEN_DEF or command == Command.GEN_LEN:
-        length = default_length       # pswm <alias> <username> -g
-        if command == Command.GEN_LEN:
-            length = sys.argv[4]      # pswm <alias> <username> -g [length]
+    elif arg.keys() == {"site", "username", "-g"}:
+        try:
+            length = int(arg["-g"])
+            if length < 2:
+                raise ValueError
+        except ValueError:
+            length = default_length
+        pass_vault[arg["site"]] = [
+            arg["username"], generate_password(length)]
+        print_pass_vault(pass_vault, arg["site"])
 
-        pass_vault[sys.argv[1]] = [sys.argv[2], generate_password(length)]
-        print_pass_vault(pass_vault, sys.argv[1])
+    elif arg.keys() == {"site", "-d"}:
+        del pass_vault[arg["site"]]
+        print("Deleted username and password for " + arg["site"] + ".")
 
-    elif command == Command.DEL_KEY:  # pswm <alias> -d
-        del pass_vault[sys.argv[1]]
-        print("Deleted username and password for " + sys.argv[1] + ".")
+    elif arg.keys() == {"site"}:
+        print_pass_vault(pass_vault, arg["site"])
 
-    elif command == Command.GET_KEY:  # pswm <alias>
-        print_pass_vault(pass_vault, sys.argv[1])
-
-    elif command == Command.LST_KEY:  # pswm -a
+    elif arg.keys() == {"-a"}:
         print_pass_vault(pass_vault)
 
-    else:                             # pswm
+    else:
         print(help_msg)
 
     lines = pass_vault_to_lines(pass_vault)
