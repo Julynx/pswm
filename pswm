@@ -8,11 +8,12 @@ import getpass
 from prettytable import PrettyTable, SINGLE_BORDER
 from contextlib import suppress
 
-help_msg = '''  pswm <alias> <user> <password>      - Store a username and a password.
-  pswm <alias> <user> -g=<length>     - Store a random password for a username.
-  pswm <alias> -d                     - Delete user and password for an alias.
-  pswm <alias>                        - Print user and password for an alias.
-  pswm -a                             - Print all stored users and passwords.
+help_msg = '''
+  pswm <alias> <user> <password>   - Store a username and a password.
+  pswm <alias> <user> -g=<length>  - Store a random password for a username.
+  pswm <alias> -d                  - Delete user and password for an alias.
+  pswm <alias>                     - Print user and password for an alias.
+  pswm -a                          - Print all stored users and passwords.
 '''
 min_length = 4
 default_length = 16
