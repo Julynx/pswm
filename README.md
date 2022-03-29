@@ -53,11 +53,11 @@ If you forget your master password, pswm will give you the option to reset it af
 
 After choosing a master password, a password vault will be created as a file named `.pswm` inside your home folder, to store your encrypted passwords. You can use any of the following commands to access your password vault:
 ```
-pswm <alias> <username> <password>  - Store a username and a password.
-pswm <alias> <username> -g [length] - Store a random password for a username.
-pswm <alias> -d                     - Delete user and password for an alias.
-pswm <alias>                        - Print user and password for an alias.
-pswm -a                             - Print all stored users and passwords.
+pswm <alias> <user> <password>   - Store a username and a password.
+pswm <alias> <user> -g=<length>  - Store a random password for a username.
+pswm <alias> -d                  - Delete user and password for an alias.
+pswm <alias>                     - Print user and password for an alias.
+pswm -a                          - Print all stored users and passwords.
 ```
 <br>
 
