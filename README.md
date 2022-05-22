@@ -36,9 +36,7 @@ git clone https://github.com/Julynx/pswm
 cd pswm
 ```
 ```
-chmod +x pswm
-```
-```
+sudo chmod +x pswm
 sudo cp pswm /usr/bin/
 ```
 The program can now be ran from a terminal with the command `pswm`.
