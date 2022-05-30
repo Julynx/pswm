@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+
+"""
+@file     pswm
+@date     30/05/2022
+@version  1.1
+@change   1.1: Fixed an error with pswm -d.
+@license  GNU General Public License v2.0
+@url      github.com/Julynx/pswm
+@author   Julio Cabria
+
+TODO:
+  - Fix error when using -d as first argument
+    (Should print help as -d is a trailing argument)
+"""
+
+
 import sys
 import os
 import cryptocode
@@ -7,7 +23,6 @@ import string
 import getpass
 from prettytable import PrettyTable, SINGLE_BORDER
 from contextlib import suppress
-
 help_msg = '''
   pswm <alias> <user> <password>   - Store a username and a password.
   pswm <alias> <user> -g=<length>  - Store a random password for a username.
@@ -32,8 +47,8 @@ def args(positional=[]):
 
     >> username:    joe
     >> password:    1234
-    >> keep:        True
-    >> host:        127.0.0.1
+    >> -keep:       True
+    >> -host:       127.0.0.1
 
     Args:
         positional (str): A list of strings for the positional arguments.
@@ -338,8 +353,11 @@ def main():
         print_pass_vault(pass_vault, arg["site"])
 
     elif arg.keys() == {"site", "-d"}:
-        del pass_vault[arg["site"]]
-        print("Deleted username and password for " + arg["site"] + ".")
+        try:
+            del pass_vault[arg["site"]]
+            print("Deleted username and password for " + arg["site"] + ".")
+        except KeyError:
+            print("No password found for " + arg["site"] + ".")
 
     elif arg.keys() == {"site"}:
         print_pass_vault(pass_vault, arg["site"])
