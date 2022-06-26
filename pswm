@@ -2,16 +2,12 @@
 
 """
 @file     pswm
-@date     30/05/2022
-@version  1.1
-@change   1.1: Fixed an error with pswm -d.
+@date     26/06/2022
+@version  1.2
+@change   1.2: Fixed another error with pswm -d.
 @license  GNU General Public License v2.0
 @url      github.com/Julynx/pswm
 @author   Julio Cabria
-
-TODO:
-  - Fix error when using -d as first argument
-    (Should print help as -d is a trailing argument)
 """
 
 
@@ -23,17 +19,76 @@ import string
 import getpass
 from prettytable import PrettyTable, SINGLE_BORDER
 from contextlib import suppress
-help_msg = '''
-  pswm <alias> <user> <password>   - Store a username and a password.
-  pswm <alias> <user> -g=<length>  - Store a random password for a username.
-  pswm <alias> -d                  - Delete user and password for an alias.
-  pswm <alias>                     - Print user and password for an alias.
-  pswm -a                          - Print all stored users and passwords.
-'''
-min_length = 4
-default_length = 16
-max_length = 32
-pass_vault_file = os.path.expanduser("~") + "/.pswm"
+
+
+def _get_xdg_path(env: str,
+                  app: str,
+                  default: str,
+                  create: bool = False) -> str:
+    """
+    Returns the value of the env environment variable with
+    the app folder and file appended to it. (See example below)
+
+    Example: Return value equals to
+             "XDG_CONFIG_HOME/app/app"
+             or
+             "default/app/app" if XDG_CONFIG_HOME is not set
+
+    Args:
+        env (str): Name of the environment variable.
+        app (str): Name of the app to be used for the folder and the file.
+        default (str): Default value to use for the path if env
+        is not set.
+        create (bool): Wether to create the config file or not.
+        Defaults to False. Dirs are always created if they don't exist.
+
+    Returns:
+        str: Path to the app folder and file or fallback value.
+    """
+
+    # 1. Read the XDG_config environment variable
+    if env in os.environ and os.path.exists(os.environ[env]):
+        config = os.environ[env]
+    else:
+        # Expand the default path
+        config = os.path.expanduser(default)
+
+    config = config[:-1] if config.endswith("/") else config
+
+    # 2. Create the app folder if it doesn't exist
+    config += f"/{app}"
+    os.makedirs(config, exist_ok=True)
+
+    # 3. Add the config file name to the path
+    config += f"/{app}"
+    if not os.path.exists(config) and create:
+        open(config, "w").close()
+
+    return config
+
+
+def get_xdg_data_path(app: str, create: bool = False) -> str:
+    """
+    Returns the value of the XDG_DATA_HOME environment variable with
+    the app folder and file appended to it. (See example below)
+
+    Example: Return value equals to
+            "XDG_DATA_HOME/app/app"
+            or
+            "default/app/app" if XDG_DATA_HOME is not set
+
+    Args:
+        app (str): Name of the app to be used for the folder and the file.
+        create (bool, optional): Wether to create the config file or not.
+        Defaults to False. Dirs are always created if they don't exist.
+
+    Returns:
+        str: path to the app folder and file or fallback value.
+    """
+    return _get_xdg_path(env="XDG_DATA_HOME",
+                         app=app,
+                         default="~/.local/share",
+                         create=create)
 
 
 def args(positional=[]):
@@ -324,7 +379,25 @@ def generate_password(length):
     return password
 
 
+####################
+# GLOBAL VARIABLES #
+####################
+
+help_msg = '''
+  pswm <alias> <user> <password>   - Store a username and a password.
+  pswm <alias> <user> -g=<length>  - Store a random password for a username.
+  pswm <alias> -d                  - Delete user and password for an alias.
+  pswm <alias>                     - Print user and password for an alias.
+  pswm -a                          - Print all stored users and passwords.
+'''
+min_length = 4
+default_length = 16
+max_length = 32
+pass_vault_file = get_xdg_data_path("pswm")
+
+
 def main():
+
     crypt_key, lines = manage_master_password()
     if not crypt_key:
         return
@@ -333,7 +406,7 @@ def main():
     arg = args(["site", "username", "password"])
 
     if ("password" in arg.keys() or "-g" in arg.keys() or "-d" in arg.keys()) \
-            and (str(arg["site"]) == "pswm"):
+            and (str(arg.get("site", "")) == "pswm"):
         print("You cannot change or delete the master password.")
 
     elif arg.keys() == {"site", "username", "password"}:
