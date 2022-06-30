@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     # Read command line arguments
     if len(sys.argv) != 3:
-        print("Usage: passworder.py <csv_file> <master_password>")
+        print("Usage: from_csv.py <csv_file> <master_password>")
         exit(1)
     master_password = sys.argv[2]
     filename = sys.argv[1]
