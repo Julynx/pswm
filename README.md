@@ -47,7 +47,7 @@ When running pswm for the first time, you will be prompted to define a master pa
 
 If you forget your master password, pswm will give you the option to reset it after three failed attempts. This would **delete** all your saved passwords since they would be encrypted with your old master password and impossible to decrypt without it. You should store your master password somewhere safe or choose something you will always remember.
 
-After choosing a master password, a password vault will be created as an encrypted file named `.pswm` inside your home folder. 
+After choosing a master password, a password vault will be created as an encrypted file named `pswm` inside '~/.local/share/pswm/'.
 You can use any of the following commands to access your password vault:
 ```
 pswm <alias> <user> <password>   - Store a username and a password.
