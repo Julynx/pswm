@@ -3,8 +3,8 @@
 """
 @file     pswm
 @date     26/06/2022
-@version  1.2
-@change   1.2: Fixed another error with pswm -d.
+@version  1.3
+@change   "pswm -a" now shows sorted passwords
 @license  GNU General Public License v2.0
 @url      github.com/Julynx/pswm
 @author   Julio Cabria
@@ -159,7 +159,7 @@ def print_pass_vault(pass_vault, alias=None):
             print("No password for " + alias + " was found.")
             return
     else:
-        for alias in pass_vault:
+        for alias in sorted(pass_vault, key=lambda x:x[0].lower()):
             row = []
             row.append(alias)
             row.extend(pass_vault[alias])
