@@ -380,7 +380,7 @@ def generate_password(length):
     password = random.choice(string.ascii_letters)  # At least 1 letter
     password += random.choice(string.digits)        # At least 1 digit
     password += random.choice(special_chars)        # At least 1 symbol
-    password = ''.join(random.choice(characters) for i in range(int(length-3)))
+    password += ''.join(random.choice(characters) for i in range(int(length-3)))
 
     return password
 
