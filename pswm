@@ -3,8 +3,8 @@
 """
 @file     pswm
 @date     26/06/2022
-@version  1.3
-@change   "pswm -a" now shows sorted passwords
+@version  1.4
+@change   Safer generation function
 @license  GNU General Public License v2.0
 @url      github.com/Julynx/pswm
 @author   Julio Cabria
@@ -374,8 +374,13 @@ def generate_password(length):
     Returns:
         str: A string containing the random password.
     """
-    characters = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(random.choice(characters) for i in range(int(length)))
+    characters = string.ascii_letters + string.digits + '%+,-./:=@^_{}~'
+
+    password = random.choice(string.ascii_letters)  # At least 1 letter
+    password += random.choice(string.digits)        # At least 1 digit
+    password += random.choice(special_chars)        # At least 1 symbol
+    password = ''.join(random.choice(characters) for i in range(int(length-3)))
+
     return password
 
 
@@ -417,7 +422,7 @@ def main():
     elif arg.keys() == {"site", "username", "-g"}:
         try:
             length = int(arg["-g"])
-            if length < 2:
+            if length <= 4:
                 raise ValueError
         except ValueError:
             length = default_length
