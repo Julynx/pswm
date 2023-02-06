@@ -374,15 +374,8 @@ def generate_password(length):
     Returns:
         str: A string containing the random password.
     """
-    special_chars = '%+,-./:=@^_{}~'
-    characters = string.ascii_letters + string.digits + special_chars
-
-    password = random.choice(string.ascii_letters)  # At least 1 letter
-    password += random.choice(string.digits)        # At least 1 digit
-    password += random.choice(special_chars)        # At least 1 symbol
-    password += ''.join(random.choice(characters) for i in range(length-3))
-
-    return password
+    characters = string.ascii_letters + string.digits + '%+,-./:=@^_{}~'
+    return ''.join(random.choice(characters) for i in range(length))
 
 
 ####################
