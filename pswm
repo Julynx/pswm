@@ -3,8 +3,8 @@
 """
 @file     pswm
 @date     26/06/2022
-@version  1.4
-@change   Safer generation function
+@version  1.2
+@change   1.2: Fixed another error with pswm -d.
 @license  GNU General Public License v2.0
 @url      github.com/Julynx/pswm
 @author   Julio Cabria
@@ -13,12 +13,12 @@
 
 import sys
 import os
-import cryptocode
 import random
 import string
-import getpass
-from prettytable import PrettyTable, SINGLE_BORDER
 from contextlib import suppress
+import getpass
+import cryptocode
+from prettytable import PrettyTable, SINGLE_BORDER
 
 
 def _get_xdg_path(env: str,
@@ -62,7 +62,8 @@ def _get_xdg_path(env: str,
     # 3. Add the config file name to the path
     config += f"/{app}"
     if not os.path.exists(config) and create:
-        open(config, "w").close()
+        with open(config, "w") as file:
+            file.write("")
 
     return config
 
@@ -91,7 +92,7 @@ def get_xdg_data_path(app: str, create: bool = False) -> str:
                          create=create)
 
 
-def args(positional=[]):
+def args(positional=None):
     """
     Simple argument parser.
 
@@ -111,6 +112,7 @@ def args(positional=[]):
     Returns:
         dict: A dictionary containing the argument names and their values.
     """
+    positional = [] if positional is None else positional
     args_dict = {}
 
     # Store positional arguments
@@ -129,7 +131,7 @@ def args(positional=[]):
             value = str(sys.argv[i]).split("=")[1]
         except IndexError:
             value = True
-        args_dict[str(sys.argv[i]).split("=")[0]] = value
+        args_dict[str(sys.argv[i]).split("=", maxsplit=1)[0]] = value
 
     return args_dict
 
@@ -159,10 +161,10 @@ def print_pass_vault(pass_vault, alias=None):
             print("No password for " + alias + " was found.")
             return
     else:
-        for alias in sorted(pass_vault, key=lambda x:x[0].lower()):
+        for stored_alias in sorted(pass_vault, key=lambda x: x[0].lower()):
             row = []
-            row.append(alias)
-            row.extend(pass_vault[alias])
+            row.append(stored_alias)
+            row.extend(pass_vault[stored_alias])
             table.add_row(row)
 
     table.field_names = ["Alias", "Username", "Password"]
@@ -181,11 +183,11 @@ def register():
         aliases, users and passwords for the password vault.
     """
     crypt_key = ""
-    while len(crypt_key) < min_length or len(crypt_key) > max_length:
+    while len(crypt_key) < MIN_PASS_LENGTH or len(crypt_key) > MAX_PASS_LENGTH:
         try:
             crypt_key = getpass.getpass("[pswm] Create a master password (" +
-                                        str(min_length) + "-" +
-                                        str(max_length) +
+                                        str(MIN_PASS_LENGTH) + "-" +
+                                        str(MAX_PASS_LENGTH) +
                                         " chars): ")
         except KeyboardInterrupt:
             print("\n")
@@ -214,23 +216,22 @@ def login():
         str, list: The master password and a list of lines containing the
         aliases and passwords decrypted from the password vault.
     """
-    for i in range(3):
+    for _ in range(3):
+
         try:
             crypt_key = getpass.getpass("[pswm] Master password: ")
         except KeyboardInterrupt:
             print("\n")
             return False, ""
 
-        lines = encrypted_file_to_lines(pass_vault_file, crypt_key)
+        lines = encrypted_file_to_lines(PASS_VAULT_FILE, crypt_key)
         if not lines:
             print("Sorry, try again.")
         else:
             return crypt_key, lines
 
-        if i == 2:
-            print("\nYou have failed to enter the correct "
-                  "master password 3 times.")
-            return reset_master_password()
+    print("\nYou have failed to enter the master password 3 times.")
+    return reset_master_password()
 
 
 def manage_master_password():
@@ -244,11 +245,10 @@ def manage_master_password():
         str, list: The master password and a list of lines containing the
         aliases and passwords decrypted from the password vault.
     """
-    if not (os.path.isfile(pass_vault_file)
-            and os.path.getsize(pass_vault_file) > 0):
+    if not (os.path.isfile(PASS_VAULT_FILE)
+            and os.path.getsize(PASS_VAULT_FILE) > 0):
         return register()
-    else:
-        return login()
+    return login()
 
 
 def reset_master_password():
@@ -268,13 +268,13 @@ def reset_master_password():
         return False, ""
 
     if text == "y":
-        if os.path.isfile(pass_vault_file):
-            os.remove(pass_vault_file)
+        if os.path.isfile(PASS_VAULT_FILE):
+            os.remove(PASS_VAULT_FILE)
             print("Password vault ~/.pswm deleted.\n")
         return manage_master_password()
-    else:
-        print("Password reset aborted.")
-        return False, ""
+
+    print("Password reset aborted.")
+    return False, ""
 
 
 def lines_to_pass_vault(lines):
@@ -312,11 +312,9 @@ def pass_vault_to_lines(pass_vault):
     Returns:
         list: A list of lines each formatted as key\tvalue[0]\tvalue[1].
     """
-    lines = []
-    for alias in pass_vault:
-        lines.append(alias + '\t' +
-                     pass_vault[alias][0] + '\t' +
-                     pass_vault[alias][1])
+    lines = ['\t'.join([alias, pass_vault[alias][0], pass_vault[alias][1]])
+             for alias
+             in pass_vault]
 
     return lines
 
@@ -336,8 +334,8 @@ def encrypted_file_to_lines(file_name, master_password):
     if not os.path.isfile(file_name):
         return ""
 
-    with open(file_name, 'r') as f:
-        encrypted_text = f.read()
+    with open(file_name, 'r') as file:
+        encrypted_text = file.read()
 
     decrypted_text = cryptocode.decrypt(encrypted_text, master_password)
     if decrypted_text is False:
@@ -360,8 +358,8 @@ def lines_to_encrypted_file(lines, file_name, master_password):
     decrypted_text = '\n'.join(lines)
     encrypted_text = cryptocode.encrypt(decrypted_text, master_password)
 
-    with open(file_name, 'w') as f:
-        f.write(encrypted_text)
+    with open(file_name, 'w') as file:
+        file.write(encrypted_text)
 
 
 def generate_password(length):
@@ -375,28 +373,31 @@ def generate_password(length):
         str: A string containing the random password.
     """
     characters = string.ascii_letters + string.digits + '%+,-./:=@^_{}~'
-    return ''.join(random.choice(characters) for i in range(length))
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 ####################
 # GLOBAL VARIABLES #
 ####################
 
-help_msg = '''
+HELP_MSG = '''
   pswm <alias> <user> <password>   - Store a username and a password.
   pswm <alias> <user> -g=<length>  - Store a random password for a username.
   pswm <alias> -d                  - Delete user and password for an alias.
   pswm <alias>                     - Print user and password for an alias.
   pswm -a                          - Print all stored users and passwords.
 '''
-min_length = 4
-default_length = 16
-max_length = 32
-pass_vault_file = get_xdg_data_path("pswm")
+MIN_PASS_LENGTH = 4
+DEFAULT_PASS_LENGTH = 16
+MAX_PASS_LENGTH = 32
+# PASS_VAULT_FILE = get_xdg_data_path("pswm")
+PASS_VAULT_FILE = "/mnt/1472CC7972CC615A/_DISK_/pswm"
 
 
 def main():
-
+    """
+    Main function.
+    """
     crypt_key, lines = manage_master_password()
     if not crypt_key:
         return
@@ -404,7 +405,7 @@ def main():
     pass_vault = lines_to_pass_vault(lines)
     arg = args(["site", "username", "password"])
 
-    if ("password" in arg.keys() or "-g" in arg.keys() or "-d" in arg.keys()) \
+    if ("password" in arg or "-g" in arg or "-d" in arg) \
             and (str(arg.get("site", "")) == "pswm"):
         print("You cannot change or delete the master password.")
 
@@ -419,7 +420,7 @@ def main():
             if length <= 4:
                 raise ValueError
         except ValueError:
-            length = default_length
+            length = DEFAULT_PASS_LENGTH
         pass_vault[arg["site"]] = [
             arg["username"], generate_password(length)]
         print_pass_vault(pass_vault, arg["site"])
@@ -438,10 +439,10 @@ def main():
         print_pass_vault(pass_vault)
 
     else:
-        print(help_msg)
+        print(HELP_MSG)
 
     lines = pass_vault_to_lines(pass_vault)
-    lines_to_encrypted_file(lines, pass_vault_file, crypt_key)
+    lines_to_encrypted_file(lines, PASS_VAULT_FILE, crypt_key)
 
 
 if __name__ == "__main__":
