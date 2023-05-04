@@ -2,9 +2,9 @@
 
 """
 @file     pswm
-@date     26/06/2022
-@version  1.2
-@change   1.2: Fixed another error with pswm -d.
+@date     04/05/2023
+@version  1.5
+@change   1.5: Code linting
 @license  GNU General Public License v2.0
 @url      github.com/Julynx/pswm
 @author   Julio Cabria
@@ -390,8 +390,7 @@ HELP_MSG = '''
 MIN_PASS_LENGTH = 4
 DEFAULT_PASS_LENGTH = 16
 MAX_PASS_LENGTH = 32
-# PASS_VAULT_FILE = get_xdg_data_path("pswm")
-PASS_VAULT_FILE = "/mnt/1472CC7972CC615A/_DISK_/pswm"
+PASS_VAULT_FILE = get_xdg_data_path("pswm")
 
 
 def main():
