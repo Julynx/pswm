@@ -1,5 +1,5 @@
 # pswm
-*A simple command line password manager written in python.*
+*A simple command line password manager written in Python.*
 <br><br>
 
 <h4 align="center">Built to be secure, it encrypts your passwords with a key that only you know.</h4>
